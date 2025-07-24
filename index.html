@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Sinhala Quiz</title>
+    <script type="text/javascript" src="https://cdn.emailjs.com/sdk/v4/email.min.js"></script>
+    <script type="text/javascript">
+        // EMAILJS INITIALIZATION: Your Public Key
+        // This key is safe to use in client-side code.
+        (function() {
+            emailjs.init("FR5A16Ko7ynvRAD9J"); // Your Public Key is inserted here!
+        })();
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        /* Styles for the Name Input Screen */
+        #name-input-screen {
+            text-align: center;
+            padding: 30px 20px;
+        }
+        #name-input-screen h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        #name-input-screen input[type="text"] {
+            width: calc(100% - 40px);
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1.1em;
+        }
+        #name-input-screen button {
+            padding: 12px 30px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #name-input-screen button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Existing Quiz Styles */
+        .quiz-container h2 {
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 1.8em;
+        }
+
+        .answer-buttons button {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+            text-align: left; /* Align text to the left for better readability of Sinhala */
+        }
+
+        .answer-buttons button:hover {
+            background-color: #e9e9e9;
+            border-color: #999;
+        }
+
+        .answer-buttons button.correct {
+            background-color: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .answer-buttons button.incorrect {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .answer-buttons button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .controls {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        #next-button, #restart-button, #send-email-button {
+            padding: 12px 30px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #send-email-button {
+            background-color: #28a745; /* Green for send email */
+        }
+
+        #next-button:hover, #restart-button:hover {
+            background-color: #0056b3;
+        }
+        #send-email-button:hover {
+            background-color: #218838;
+        }
+
+        .results {
+            margin-top: 20px;
+            font-size: 1.1em;
+            color: #333;
+            text-align: left;
+        }
+
+        .results h3, .results h4 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .results .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .results .summary-item {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .results .summary-item strong {
+            display: block;
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+        .results .summary-item span {
+            font-size: 0.9em;
+        }
+
+        .results ul {
+            list-style: disc;
+            margin-left: 20px;
+            padding-left: 0;
+        }
+
+        .results li {
+            margin-bottom: 8px;
+        }
+
+        #score, #accuracy, #correct-count, #wrong-count, #skipped-count {
+            font-weight: bold;
+        }
+
+        #score { color: #28a745; }
+        #accuracy { color: #007bff; }
+        #correct-count { color: #28a745; }
+        #wrong-count { color: #dc3545; }
+        #skipped-count { color: #ffc107; }
+
+        #email-status {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="name-input-screen">
+            <h2>Welcome to the Sinhala Quiz!</h2>
+            <p>Please enter your name to start:</p>
+            <input type="text" id="student-name-input" placeholder="Your Name" required>
+            <button id="start-quiz-button">Start Quiz</button>
+        </div>
+
+        <div class="quiz-container" style="display: none;">
+            <h2 id="question-text">Question will appear here</h2>
+            <div class="answer-buttons" id="answer-buttons">
+                </div>
+            <div class="controls">
+                <button id="next-button">Next Question</button>
+                <button id="restart-button" style="display: none;">Restart Quiz</button>
+                <button id="send-email-button" style="display: none;">Send Results via Email</button>
+            </div>
+            <div class="results" id="results" style="display: none;">
+                <h3>Quiz Results</h3>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong><span id="score">0</span>/<span id="total-questions">0</span></strong>
+                        <span>Score</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong><span id="accuracy">0%</span></strong>
+                        <span>Accuracy</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong id="correct-count">0</strong><span>Correct</span>
+                        <strong id="wrong-count">0</strong><span>Incorrect</span>
+                        <strong id="skipped-count">0</strong><span>Skipped</span>
+                    </div>
+                </div>
+
+                <div id="highlights-section">
+                    <h4>Highlights</h4>
+                    <ul id="highlights-list"></ul>
+                </div>
+
+                <div id="focus-areas-section" style="margin-top: 20px;">
+                    <h4>Focus Areas</h4>
+                    <ul id="focus-areas-list"></ul>
+                </div>
+                <div id="email-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quiz Data - each question has a category for performance analysis
+        const quizData = [
+            {
+                question: "How to say 'cat' in Sinhala?",
+                options: ["පූසා", "බල්ලා", "කුරුල්ලා", "මාළුවා"],
+                correctAnswerIndex: 0,
+                category: "Vocabulary (Animals)"
+            },
+            {
+                question: "What does the verb 'කියවනවා' mean?",
+                options: ["Read", "Watch", "Play", "Run"],
+                correctAnswerIndex: 0,
+                category: "Verbs"
+            },
+            {
+                question: "What does the phrase 'කරුණාකරලා' mean?",
+                options: ["Please", "Thank you", "Sorry", "Good morning"],
+                correctAnswerIndex: 0,
+                category: "Conversational Phrases"
+            },
+            {
+                question: "How to say 'green' in Sinhala?",
+                options: ["කොළ", "කහ", "තැඹිලි", "දම්"],
+                correctAnswerIndex: 0,
+                category: "Vocabulary (Colors)"
+            },
+            {
+                question: "What does the word 'අත' mean?",
+                options: ["Hand", "Eye", "Ear", "Mouth"],
+                correctAnswerIndex: 0,
+                category: "Vocabulary (Body Parts)"
+            },
+            {
+                question: "How to say 'one' in Sinhala?",
+                options: ["එක", "දෙක", "තුන", "හතර"],
+                correctAnswerIndex: 0,
+                category: "Numerals"
+            },
+            {
+                question: "How to say 'Stop!' in Sinhala?",
+                options: ["ඉන්න!", "දෙන්න!", "කන්න!", "බොන්න!"],
+                correctAnswerIndex: 0,
+                category: "Verbs (Commands)"
+            },
+            {
+                question: "What does 'ඇයි' mean?",
+                options: ["Why?", "How?", "Which?", "Whose?"],
+                correctAnswerIndex: 0,
+                category: "Question Words"
+            },
+            {
+                question: "Which Sinhala letter represents the sound 'p'?",
+                options: ["ප", "බ", "ට", "ක"],
+                correctAnswerIndex: 0,
+                category: "Sinhala Alphabet (Sounds)"
+            },
+            {
+                question: "What is the translation of 'අලියා'?",
+                options: ["Elephant", "Giraffe", "Monkey", "Crocodile"],
+                correctAnswerIndex: 0,
+                category: "Vocabulary (Animals)"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let skippedCount = 0;
+        // Stores user's response for each question: { questionIndex, category, isCorrect, skipped }
+        let userResponses = [];
+        let studentName = "Guest"; // Default name, updated from input
+
+        // DOM Elements - retrieved by their IDs
+        const nameInputScreen = document.getElementById('name-input-screen');
+        const studentNameInput = document.getElementById('student-name-input');
+        const startQuizButton = document.getElementById('start-quiz-button');
+        const quizContainer = document.querySelector('.quiz-container');
+
+        const questionTextElement = document.getElementById('question-text');
+        const answerButtonsElement = document.getElementById('answer-buttons');
+        const nextButton = document.getElementById('next-button');
+        const restartButton = document.getElementById('restart-button');
+        const sendEmailButton = document.getElementById('send-email-button');
+        const resultsElement = document.getElementById('results');
+        const scoreElement = document.getElementById('score');
+        const totalQuestionsElement = document.getElementById('total-questions');
+        const accuracyElement = document.getElementById('accuracy');
+        const correctCountElement = document.getElementById('correct-count');
+        const wrongCountElement = document.getElementById('wrong-count');
+        const skippedCountElement = document.getElementById('skipped-count');
+        const highlightsList = document.getElementById('highlights-list');
+        const focusAreasList = document.getElementById('focus-areas-list');
+        const emailStatusElement = document.getElementById('email-status');
+
+        // --- Quiz Flow Functions ---
+
+        // Initializes the application by showing the name input screen
+        function initApp() {
+            nameInputScreen.style.display = 'block';
+            quizContainer.style.display = 'none';
+        }
+
+        // Starts the quiz after getting the student's name
+        function startQuiz() {
+            console.log("startQuiz function called."); // Debugging line
+            const name = studentNameInput.value.trim();
+            console.log("Student Name entered:", name); // Debugging line
+
+            if (name) {
+                studentName = name;
+                nameInputScreen.style.display = 'none'; // Hides the name input screen
+                quizContainer.style.display = 'block';   // Shows the main quiz container
+
+                // Reset quiz variables
+                currentQuestionIndex = 0;
+                score = 0;
+                correctCount = 0;
+                wrongCount = 0;
+                skippedCount = 0;
+                userResponses = [];
+
+                // Reset UI elements for a new quiz
+                resultsElement.style.display = 'none';
+                restartButton.style.display = 'none';
+                sendEmailButton.style.display = 'none';
+                answerButtonsElement.style.display = 'block';
+                nextButton.style.display = 'block';
+                nextButton.textContent = 'Next Question';
+                totalQuestionsElement.textContent = quizData.length;
+                emailStatusElement.textContent = ''; // Clear previous email status message
+
+                showQuestion(); // Start displaying questions
+            } else {
+                alert("Please enter your name to start!");
+                // If name is empty, ensure the name input screen remains visible
+                nameInputScreen.style.display = 'block';
+                quizContainer.style.display = 'none';
+            }
+        }
+
+        // Displays the current question and its answer options
+        function showQuestion() {
+            resetQuestionState(); // Clear previous question's elements and state
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionTextElement.textContent = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+
+            // Create buttons for each answer option
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('btn');
+                button.dataset.index = index; // Store index to check correctness
+                button.addEventListener('click', selectAnswer); // Add click event listener
+                answerButtonsElement.appendChild(button);
+            });
+        }
+
+        // Resets the state of answer buttons and hides the next button
+        function resetQuestionState() {
+            // Clear previous highlights/focus areas on quiz restart to ensure fresh generation
+            highlightsList.innerHTML = '';
+            focusAreasList.innerHTML = '';
+
+            // Remove all existing answer buttons
+            while (answerButtonsElement.firstChild) {
+                answerButtonsElement.removeChild(answerButtonsElement.firstChild);
+            }
+            nextButton.style.display = 'none'; // Hide next button until an answer is selected
+        }
+
+        // Handles user's answer selection
+        function selectAnswer(e) {
+            const selectedButton = e.target;
+            const selectedAnswerIndex = parseInt(selectedButton.dataset.index);
+            const currentQuestion = quizData[currentQuestionIndex];
+
+            // Disable all buttons and provide immediate visual feedback
+            Array.from(answerButtonsElement.children).forEach(button => {
+                button.disabled = true; // Disable all buttons
+                if (parseInt(button.dataset.index) === currentQuestion.correctAnswerIndex) {
+                    button.classList.add('correct'); // Highlight correct answer
+                } else if (button === selectedButton) {
+                    button.classList.add('incorrect'); // Highlight user's incorrect answer
+                }
+            });
+
+            const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
+
+            // Record response: Add or update the response for the current question
+            // Ensure we only record one response per question or update if re-selected
+            if (userResponses.length <= currentQuestionIndex) {
+                userResponses.push({
+                    questionIndex: currentQuestionIndex,
+                    category: currentQuestion.category,
+                    isCorrect: isCorrect,
+                    skipped: false // User actively selected an answer
+                });
+                if (isCorrect) { score++; correctCount++; }
+                else { wrongCount++; }
+            } else {
+                // This part handles a scenario if a user were to click an answer
+                // after having potentially navigated via 'Next' without answering.
+                // For this simple quiz, we assume linear progression.
+                // The main logic for skipped questions is handled in nextQuestion().
+                // For simplicity, if they re-click an answer on the current question,
+                // we just ensure the correct class is applied and score is not double-counted.
+                if (userResponses[currentQuestionIndex].skipped === true) {
+                    // If it was skipped before and now answered
+                    if (isCorrect) {
+                        score++;
+                        correctCount++;
+                        skippedCount--;
+                    } else {
+                        wrongCount++;
+                        skippedCount--;
+                    }
+                    userResponses[currentQuestionIndex].skipped = false;
+                    userResponses[currentQuestionIndex].isCorrect = isCorrect;
+                } else {
+                    // If they change their answer, update counts
+                    if (userResponses[currentQuestionIndex].isCorrect !== isCorrect) {
+                        if (isCorrect) { // Was wrong, now correct
+                            score++; correctCount++; wrongCount--;
+                        } else { // Was correct, now wrong
+                            score--; correctCount--; wrongCount++;
+                        }
+                        userResponses[currentQuestionIndex].isCorrect = isCorrect;
+                    }
+                }
+            }
+            nextButton.style.display = 'block'; // Show next button
+        }
+
+        // Moves to the next question or shows results if quiz is finished
+        function nextQuestion() {
+            // Before moving to the next question, check if the current one was answered.
+            // If userResponses doesn't have an entry for the current question,
+            // or if the existing entry indicates it was skipped, record it as skipped.
+            if (userResponses.length <= currentQuestionIndex || (userResponses[currentQuestionIndex] && userResponses[currentQuestionIndex].skipped === undefined)) {
+                skippedCount++;
+                userResponses.push({
+                    questionIndex: currentQuestionIndex,
+                    category: quizData[currentQuestionIndex].category,
+                    isCorrect: false, // Treat as incorrect for scoring purposes if skipped
+                    skipped: true // Explicitly mark as skipped
+                });
+            }
+
+
+            currentQuestionIndex++; // Move to the next question index
+            if (currentQuestionIndex < quizData.length) {
+                showQuestion(); // Show the next question
+            } else {
+                showResults(); // Quiz finished, show results
+            }
+        }
+
+        // Displays the final quiz results
+        function showResults() {
+            resetQuestionState(); // Clear question area
+            questionTextElement.textContent = `Quiz Finished, ${studentName}!`;
+            answerButtonsElement.style.display = 'none'; // Hide answer buttons
+            nextButton.style.display = 'none'; // Hide next button
+            restartButton.style.display = 'block'; // Show restart button
+            sendEmailButton.style.display = 'block'; // Show send email button
+            resultsElement.style.display = 'block'; // Show results section
+
+            // Update summary statistics in the HTML
+            scoreElement.textContent = score;
+            accuracyElement.textContent = ((score / quizData.length) * 100).toFixed(0) + '%';
+            correctCountElement.textContent = correctCount;
+            wrongCountElement.textContent = wrongCount;
+            skippedCountElement.textContent = skippedCount;
+
+            analyzePerformance(); // Analyze and display highlights/focus areas
+        }
+
+        // Analyzes user performance to determine strengths (highlights) and areas for improvement (focus areas)
+        function analyzePerformance() {
+            const categoryPerformance = {};
+
+            // Initialize all categories from quizData to ensure they appear even if no questions were attempted
+            quizData.forEach(q => {
+                if (!categoryPerformance[q.category]) {
+                    categoryPerformance[q.category] = { correct: 0, total: 0, attempted: 0 };
+                }
+            });
+
+            // Aggregate performance based on user's responses
+            userResponses.forEach(response => {
+                categoryPerformance[response.category].total++; // Total questions belonging to this category that were presented
+                if (!response.skipped) { // Only count if actually attempted (not skipped)
+                    categoryPerformance[response.category].attempted++;
+                    if (response.isCorrect) {
+                        categoryPerformance[response.category].correct++;
+                    }
+                }
+            });
+
+            highlightsList.innerHTML = ''; // Clear previous lists
+            focusAreasList.innerHTML = '';
+
+            let hasHighlights = false;
+            let hasFocusAreas = false;
+
+            // Iterate through categories to determine feedback
+            for (const category in categoryPerformance) {
+                const data = categoryPerformance[category];
+                // Calculate percentage based on attempted questions, not total, for better feedback
+                const percentage = (data.attempted > 0) ? (data.correct / data.attempted) * 100 : 0;
+
+                const listItem = document.createElement('li');
+                if (data.total === 0) continue; // Skip categories with no questions defined in quizData
+
+                if (percentage >= 70 && data.attempted > 0) { // Strength threshold (at least one attempted)
+                    listItem.textContent = `${category}: You did great (${data.correct} out of ${data.attempted} correct).`;
+                    highlightsList.appendChild(listItem);
+                    hasHighlights = true;
+                } else if (percentage < 50 && data.attempted > 0) { // Improvement threshold (at least one attempted)
+                    listItem.textContent = `${category}: Needs more practice (${data.correct} out of ${data.attempted} correct).`;
+                    focusAreasList.appendChild(listItem);
+                    hasFocusAreas = true;
+                } else if (data.attempted === 0 && data.total > 0) { // All questions in this category were skipped
+                    listItem.textContent = `${category}: All questions in this category were skipped.`;
+                    focusAreasList.appendChild(listItem);
+                    hasFocusAreas = true;
+                }
+                // If percentage is between 50-70, it's considered 'moderate' and not explicitly highlighted as strength or weakness.
+            }
+
+            // Fallback messages if no specific highlights/focus areas based on thresholds
+            if (!hasHighlights) {
+                const li = document.createElement('li');
+                li.textContent = "No distinct strong areas found yet. Keep practicing!";
+                highlightsList.appendChild(li);
+            }
+            if (!hasFocusAreas) {
+                const li = document.createElement('li');
+                li.textContent = "Great job! It seems you don't have distinct areas for improvement. Keep up the excellent work!";
+                focusAreasList.appendChild(li);
+            }
+        }
+
+        // --- EmailJS Integration ---
+
+        // Sends quiz results to a predefined email using EmailJS
+        async function sendResultsEmail() {
+            emailStatusElement.textContent = 'Sending results...';
+            sendEmailButton.disabled = true; // Disable button to prevent multiple submissions
+
+            // Get the HTML content of highlights and focus areas lists
+            const highlightsHtml = highlightsList.innerHTML;
+            const focusAreasHtml = focusAreasList.innerHTML;
+
+            // Define the parameters for your EmailJS template.
+            // These names (e.g., 'user_name', 'quiz_score') must match the variables
+            // you defined in your EmailJS email template.
+            const templateParams = {
+                user_name: studentName,
+                quiz_score: `${score} / ${quizData.length}`,
+                quiz_accuracy: `${((score / quizData.length) * 100).toFixed(0)}%`,
+                correct_count: correctCount,
+                wrong_count: wrongCount,
+                skipped_count: skippedCount,
+                highlights_html: highlightsHtml, // Pass HTML content
+                focus_areas_html: focusAreasHtml, // Pass HTML content
+                to_email: "pokunayakuna@gmail.com" // Your target email address
+            };
+
+            const serviceID = 'service_r7uq2tf'; // Your EmailJS Service ID
+            const templateID = 'template_20hgfa2'; // Your EmailJS Template ID
+
+            try {
+                // Attempt to send the email using emailjs.send()
+                const response = await emailjs.send(serviceID, templateID, templateParams);
+                console.log('SUCCESS!', response.status, response.text);
+                emailStatusElement.style.color = 'green';
+                emailStatusElement.textContent = 'Results successfully sent to email!';
+            } catch (err) {
+                // Handle any errors during email sending
+                console.error('FAILED...', err);
+                emailStatusElement.style.color = 'red';
+                emailStatusElement.textContent = 'Error sending results. Please try another browser or check your network.';
+            } finally {
+                sendEmailButton.disabled = false; // Re-enable button after attempt
+            }
+        }
+
+        // --- Event Listeners ---
+        // Listener for the 'Start Quiz' button on the name input screen
+        startQuizButton.addEventListener('click', function() {
+            console.log("Start Quiz button clicked!"); // Debugging line
+            startQuiz(); // Call the function directly
+        });
+
+        // Listener for the 'Next Question' button during the quiz
+        nextButton.addEventListener('click', nextQuestion);
+        // Listener for the 'Restart Quiz' button on the results screen
+        restartButton.addEventListener('click', startQuiz);
+        // Listener for the 'Send Results via Email' button on the results screen
+        sendEmailButton.addEventListener('click', sendResultsEmail);
+
+        // Initialize the app when the page loads, showing the name input screen first
+        initApp();
+    </script>
+</body>
+</html>
